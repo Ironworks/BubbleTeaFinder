@@ -45,7 +45,59 @@ class FilterViewController: UITableViewController {
   @IBOutlet weak var nameZASortCell: UITableViewCell!
   @IBOutlet weak var distanceSortCell: UITableViewCell!
   @IBOutlet weak var priceSortCell: UITableViewCell!
-  
+    
+    var coreDataStack: CoreDataStack!
+    
+    lazy var cheapVenuePredicate: NSPredicate = {
+        var predicate = NSPredicate(format: "priceInfo.priceCategory == %@", "$")
+        return predicate
+    }()
+    
+    lazy var moderateVenuePredicate: NSPredicate = {
+        var predicate = NSPredicate(format: "priceInfo.priceCategory == %@", "$$")
+        return predicate
+    }()
+    
+    
+    
+    func populateCheapVenueCountLabel() {
+        
+        //$ fetch request
+        let fetchRequest = NSFetchRequest(entityName: "Venue")
+        fetchRequest.resultType = .CountResultType
+        fetchRequest.predicate = cheapVenuePredicate
+        
+        do {
+            let results  = try coreDataStack.context.executeFetchRequest(fetchRequest) as! [NSNumber]
+            
+            let count = results.first!.integerValue
+            firstPriceCategoryLabel.text = "\(count) bubble tea places"
+        } catch let error as NSError {
+            print("Could not fetch \(error), \(error.userInfo)")
+        }
+    }
+    
+    func populateModerateVenueCountLabel() {
+        //$$ fetch
+        let fetchRequest = NSFetchRequest(entityName: "Venue")
+        fetchRequest.resultType = .CountResultType
+        fetchRequest.predicate = moderateVenuePredicate
+        
+        do {
+            let results  = try coreDataStack.context.executeFetchRequest(fetchRequest) as! [NSNumber]
+            let count = results.first!.integerValue
+            secondPriceCategoryLabel.text = "\(count) bubble tea places"
+        } catch let error as NSError {
+            print("Could not fetch \(error), \(error.userInfo)")
+        }
+    }
+    
+  //MARK - View Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        populateCheapVenueCountLabel()
+        populateModerateVenueCountLabel()
+    }
 
   //MARK - UITableViewDelegate methods
   
