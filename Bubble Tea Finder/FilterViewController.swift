@@ -112,6 +112,14 @@ class FilterViewController: UITableViewController {
         
     }
     
+    func populateDealsCountLabel() {
+        let fetchRequest = NSFetchRequest(entityName: "Venue")
+        fetchRequest.resultType = .DictionaryResultType
+        
+        let sumExpressionDesc = NSExpressionDescription()
+        sumExpressionDesc.name = "sumDeals"
+    }
+    
   //MARK - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
