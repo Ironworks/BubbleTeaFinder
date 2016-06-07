@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+//Add another comment
+
 import UIKit
 import CoreData
 
@@ -56,7 +58,7 @@ class ViewController: UIViewController {
 //    fetchRequest = model.fetchRequestTemplateForName("FetchRequest")
     
     fetchRequest = NSFetchRequest(entityName: "Venue")
-        
+    
     asyncFetchRequest = NSAsynchronousFetchRequest(fetchRequest: fetchRequest)
     { [unowned self] (result: NSAsynchronousFetchResult!)
         -> Void in
