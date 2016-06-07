@@ -23,6 +23,10 @@
 import UIKit
 import CoreData
 
+protocol FilterViewControllerDelegate: class {
+    func filterViewController(filter: FilterViewController, didSelectPredicate predicate:NSPredicate?, sortDescriptor:NSSortDescriptor?)
+}
+
 class FilterViewController: UITableViewController {
   
   @IBOutlet weak var firstPriceCategoryLabel: UILabel!
@@ -62,6 +66,10 @@ class FilterViewController: UITableViewController {
         var predicate = NSPredicate(format: "priceInfo.priceCategory == %@", "$$$")
         return predicate
     }()
+    
+    weak var delegate: FilterViewControllerDelegate?
+    var selectedSortDescriptor: NSSortDescriptor?
+    var selectedPredicate: NSPredicate?
     
     func populateCheapVenueCountLabel() {
         
@@ -112,12 +120,27 @@ class FilterViewController: UITableViewController {
         
     }
     
-    func populateDealsCountLabel() {
+    func populateDealsCountLabel () {
+        
         let fetchRequest = NSFetchRequest(entityName: "Venue")
         fetchRequest.resultType = .DictionaryResultType
         
         let sumExpressionDesc = NSExpressionDescription()
         sumExpressionDesc.name = "sumDeals"
+        sumExpressionDesc.expression = NSExpression(forFunction: "sum:", arguments: [NSExpression(forKeyPath: "specialCount")])
+        sumExpressionDesc.expressionResultType = .Integer32AttributeType
+        
+        fetchRequest.propertiesToFetch = [sumExpressionDesc]
+        
+        do {
+            let results = try coreDataStack.context.executeFetchRequest(fetchRequest) as! [NSDictionary]
+            let resultDict = results.first
+            let numDeals = resultDict!["sumDeals"]
+            numDealsLabel.text = "\(numDeals!) total deals"
+        } catch let error as NSError {
+            print("Could not fetch \(error), \(error.userInfo)")
+        }
+        
     }
     
   //MARK - View Lifecycle
@@ -126,17 +149,35 @@ class FilterViewController: UITableViewController {
         populateCheapVenueCountLabel()
         populateModerateVenueCountLabel()
         populateExpensiveVenueCountLabel()
+        populateDealsCountLabel()
     }
 
   //MARK - UITableViewDelegate methods
   
   override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
     
+    let cell = tableView.cellForRowAtIndexPath(indexPath)!
+    
+    switch cell {
+    case cheapVenueCell:
+        selectedPredicate = cheapVenuePredicate
+    case moderateVenueCell:
+        selectedPredicate = moderateVenuePredicate
+    case expensiveVenueCell:
+        selectedPredicate = expensiveVenuePredicate
+    default:
+        print("default case")
+    }
+    
+    cell.accessoryType = .Checkmark
+    
   }
   
   // MARK - UIButton target action
   
   @IBAction func saveButtonTapped(sender: UIBarButtonItem) {
+    
+    delegate!.filterViewController(self, didSelectPredicate: selectedPredicate, sortDescriptor: selectedSortDescriptor)
     
     dismissViewControllerAnimated(true, completion:nil)
   }
